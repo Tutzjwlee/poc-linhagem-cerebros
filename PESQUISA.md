@@ -24,6 +24,37 @@ frente da banca?
 | `expo-file-system` (arquivo JSON) | Ler e gravar arquivos | Não. Mesmo problema do AsyncStorage: sem consulta nem restrição, e a gravação concorrente fica por minha conta. |
 | JSON fixo dentro do app | Mostrar dados que não mudam | Não. Resolve a leitura, mas um run novo (o próximo treino) não teria onde ser gravado. |
 | App buscar os logs no PC pela rede | Acompanhar o treino ao vivo | Não. Quebra a condição da pergunta (na banca não há o PC nem rede garantida) e é monitoramento, outro tema. O PC só **exporta** um arquivo; quem guarda e consulta é o SQLite do celular. |
+| `react-native-mmkv` (sugerido pelo DeepSeek) | Chave-valor rápido | Não. Mesmo limite do AsyncStorage (sem consulta nem relação), e a instalação no Expo pede `npx expo prebuild`, ou seja, código nativo fora do Expo Go. |
+
+## Mapa do tema em duas IAs (exercício 3)
+
+Em 07/11/2026, o mesmo prompt da seção 4.2 da apostila foi enviado ao **Gemini** e ao **DeepSeek**:
+
+> Estou fazendo meu TCC: um jogo de terror em Unity em que o monstro é treinado com aprendizado por reforço (Unity
+> ML-Agents), e cada treino herda o cérebro do treino anterior. Preciso resolver o seguinte problema: guardar no
+> celular a árvore de herança dos treinos (quem herdou de quem e quantos steps cada um treinou) e consultá-la sem
+> internet, porque os logs só existem no PC de treino. O app é feito com React Native e Expo, em TypeScript. Quais são
+> as alternativas para resolver isso nesse ecossistema? Para cada uma, diga em uma frase quando ela é a melhor escolha
+> e quando não é, e indique a página da documentação oficial que eu devo ler. Não escreva código ainda.
+
+**Onde concordaram:** as duas puseram `expo-sqlite`, `expo-file-system` (arquivo JSON) e AsyncStorage, e as duas
+recomendam o SQLite quando é preciso consultar ancestrais e descendentes.
+
+**Onde divergiram, e o que a fonte confirma:**
+
+| Ponto | Gemini | DeepSeek | O que a fonte diz |
+|---|---|---|---|
+| Quantas alternativas | 3 | 6 (+ MMKV, `react-native-cozo`, Dync) | A página *Store data* do Expo cita só quatro: SecureStore, FileSystem, SQLite e Async Storage. MMKV, Cozo e Dync não aparecem. |
+| Link do AsyncStorage | `react-native-async-storage.github.io/async-storage/` | `react-native-async-storage.github.io/` | O do Gemini dá **404**. O do DeepSeek redireciona para `/latest/`, a documentação oficial. O Expo também tem a página própria (SDK 58). |
+| Consulta da árvore | "consultas relacionais complexas" | cita CTE recursiva com `parent_id` | A página do `expo-sqlite` não fala de consulta recursiva; quem documenta é o próprio SQLite (`lang_with.html`). O DeepSeek acertou o mecanismo. |
+| MMKV no Expo Go | — | não diz que precisa de build nativo | O README manda rodar `npx expo prebuild` (gera código nativo), então não roda no Expo Go. A resposta omitiu isso. |
+| `react-native-cozo` | — | "não funciona no Expo Go", link como "documentação oficial" | O README confirma: "won't work with Expo Go. You must use a development build". Mas é um plugin de terceiro com 5 estrelas, não a documentação oficial do Cozo, cujo README não tem React Native. |
+| JSON via FileSystem | "a árvore gerada no PC, exportada como JSON, só para leitura" | "snapshot, sem consultas" | É quase o caminho do `tools/exportar_linhagem.py`. A diferença é que aqui o JSON só **alimenta** o SQLite, porque o celular também registra runs, o caso em que a própria resposta do Gemini diz que o arquivo não serve. |
+| Versão da documentação | links `latest` | links `latest` | Hoje `latest` = SDK 58, mas o `AGENTS.md` pede a versão exata do SDK (`v58.0.0`): quando sair o SDK 59, esses links passam a descrever outra versão. |
+
+**Conclusão:** a escolha do `expo-sqlite` se mantém. A resposta mais longa (DeepSeek) trouxe mais opções, mas parte
+delas é de nicho ou fora do Expo Go, e chamou de "oficial" um repositório pequeno de terceiro. A mais curta (Gemini)
+errou um link. Nas duas, só a documentação desempatou.
 
 ## Como funciona
 
@@ -92,6 +123,12 @@ flowchart LR
 - SQLite, *ALTER TABLE* — https://sqlite.org/lang_altertable.html — `ADD COLUMN`, usado na migração para a versão 2.
 - ONNX, *Serialization* — https://onnx.ai/onnx/api/serialization.html — `onnx.load` e a opção `load_external_data`,
   para ler o formato do modelo sem carregar os pesos.
+- Async Storage, documentação oficial — https://react-native-async-storage.github.io/latest/ — "asynchronous,
+  unencrypted, persistent key-value storage" (conferida no exercício 3).
+- `react-native-mmkv`, README — https://github.com/margelo/react-native-mmkv — instalação no Expo com
+  `npx expo prebuild`.
+- `react-native-cozo`, README — https://github.com/AdebisiJoe/react-native-cozo — "won't work with Expo Go";
+  Cozo oficial — https://github.com/cozodb/cozo — sem React Native na lista de plataformas.
 - ML-Agents (clone local, release 21), `ml-agents/mlagents/trainers/stats.py` — o `TensorboardWriter` grava as
   configurações do treino no log como o texto `Hyperparameters` (é dali que o script tira o `init_path`).
 - Expo, *Using Model Context Protocol (MCP) with Expo* — https://docs.expo.dev/eas/ai/mcp/ — servidor
@@ -158,6 +195,20 @@ lint e num teste do SQL. Os erros abaixo aconteceram de verdade durante a constr
 - O que veio: `<Text>"No fim" = ...</Text>`.
 - Como percebi: `npx expo lint` → `react/no-unescaped-entities`.
 - O certo: escapar (`&quot;`) ou usar aspas tipográficas (“ ”) dentro do texto do JSX.
+
+**8. Link de documentação que não existe (Gemini, mapa do tema)**
+- Pedido: o prompt de mapa do tema, pedindo a página oficial de cada alternativa.
+- O que veio: AsyncStorage → `https://react-native-async-storage.github.io/async-storage/`.
+- Como percebi: abrindo o link: 404.
+- O certo: `https://react-native-async-storage.github.io/latest/` ou a página do Expo
+  (`docs.expo.dev/versions/v58.0.0/sdk/async-storage/`).
+
+**9. Repositório de terceiro apresentado como documentação oficial (DeepSeek, mapa do tema)**
+- Pedido: o mesmo prompt.
+- O que veio: `react-native-cozo` com "Documentação oficial: github.com/AdebisiJoe/react-native-cozo".
+- Como percebi: abrindo o repositório (plugin de uma pessoa, 5 estrelas) e o README oficial do Cozo
+  (`github.com/cozodb/cozo`), que não lista React Native entre as plataformas.
+- O certo: é um plugin não oficial. O próprio README dele diz que não funciona no Expo Go.
 
 ## Resultado e próximos passos no TCC
 
