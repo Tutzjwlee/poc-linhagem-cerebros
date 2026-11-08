@@ -7,6 +7,13 @@ explorar o mapa e caçar o jogador por tentativa e erro, ao longo de milhões de
 **herdar os pesos de um run anterior** (`mlagents-learn --initialize-from=<run>`) em vez de começar do zero, então o
 cérebro que está hoje no jogo é o fim de uma cadeia de mais de dez runs.
 
+**O problema:**
+- a história de quem herdou de quem só existe nos logs do PC de treino (`results/`), fora do git;
+- documentar cada cérebro à mão é trabalhoso: da v1 à v7 são dezenas de runs, cada um com versão, pai, steps e
+  resultado;
+- os dados mais gerais de cada cérebro (quanto treinou, quantas entradas recebe, quantas ações devolve, quantas horas
+  de treino) acabam ficando de cabeça, e somem quando a pessoa não lembra.
+
 ## Pergunta de pesquisa
 
 Como o `expo-sqlite` guarda no celular a árvore de herança dos cérebros treinados (quem herdou de quem com

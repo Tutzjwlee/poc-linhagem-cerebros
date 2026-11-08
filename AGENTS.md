@@ -54,7 +54,8 @@ Docs: https://docs.expo.dev/eas/index.md
 - TCC: um monstro de jogo de terror treinado com aprendizado por reforço (Unity ML-Agents, PPO); cada versão do
   cérebro é treinada herdando os pesos de um run anterior (`--initialize-from`).
 - Problema: a história de quem herdou de quem só existe nos logs do PC (`results/`, fora do git). Sem o PC, não dá
-  para responder "de onde veio este cérebro e quanto treino ele acumulou?".
+  para responder "de onde veio este cérebro e quanto treino ele acumulou?". Documentar cada cérebro à mão é
+  trabalhoso, e os dados gerais (steps, entradas, saídas, horas) ficavam de cabeça.
 - Tecnologia investigada: `expo-sqlite` (tabela de runs com auto-referência e consulta recursiva `WITH RECURSIVE`).
 - Uma tela só, em `App.tsx`: lista dos runs; tocar num run mostra a linhagem até o run do zero, os dados do cérebro
   e os runs que herdaram dele; um formulário registra um run novo.
