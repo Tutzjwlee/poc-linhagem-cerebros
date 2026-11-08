@@ -3,7 +3,7 @@ import runsDoPc from './runsDoPc.json';
 import { RUNS_DO_TCC } from './runsDoTcc';
 import type { RunDoPc } from './tipos';
 
-const COLUNAS_DO_CEREBRO = [
+const COLUNAS_DA_VERSAO_2 = [
   'horas_treino REAL',
   'captura REAL',
   'cobertura REAL',
@@ -17,6 +17,7 @@ const COLUNAS_DO_CEREBRO = [
   'acoes INTEGER',
   'parametros INTEGER',
   'arquivo_onnx TEXT',
+  'pai_conhecido INTEGER NOT NULL DEFAULT 1',
 ];
 
 // Roda a cada abertura do banco (onInit do SQLiteProvider), antes da primeira tela.
@@ -58,7 +59,7 @@ export async function migrarSeNecessario(db: SQLiteDatabase) {
   if (versaoAtual === 1) {
     // Quem já tinha o banco da versão 1 ganha as colunas sem perder os runs registrados à mão.
     await db.withTransactionAsync(async () => {
-      for (const coluna of COLUNAS_DO_CEREBRO) {
+      for (const coluna of COLUNAS_DA_VERSAO_2) {
         await db.execAsync(`ALTER TABLE runs ADD COLUMN ${coluna}`);
       }
     });
@@ -77,19 +78,20 @@ async function importarDoPc(db: SQLiteDatabase, runs: RunDoPc[]) {
       await db.runAsync(
         `INSERT INTO runs (run_id, versao, linha, pai, steps_m, resultado, modelo, data,
            horas_treino, captura, cobertura, reward, camadas, neuronios, learning_rate, gamma,
-           entradas_total, entradas_formato, acoes, parametros, arquivo_onnx)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           entradas_total, entradas_formato, acoes, parametros, arquivo_onnx, pai_conhecido)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT (run_id) DO UPDATE SET
            linha = excluded.linha, pai = excluded.pai, steps_m = excluded.steps_m,
            horas_treino = excluded.horas_treino, captura = excluded.captura, cobertura = excluded.cobertura,
            reward = excluded.reward, camadas = excluded.camadas, neuronios = excluded.neuronios,
            learning_rate = excluded.learning_rate, gamma = excluded.gamma,
            entradas_total = excluded.entradas_total, entradas_formato = excluded.entradas_formato,
-           acoes = excluded.acoes, parametros = excluded.parametros, arquivo_onnx = excluded.arquivo_onnx`,
+           acoes = excluded.acoes, parametros = excluded.parametros, arquivo_onnx = excluded.arquivo_onnx,
+           pai_conhecido = excluded.pai_conhecido`,
         [
           r.run_id, r.versao, r.linha, r.pai, r.steps_m, r.resultado, r.modelo, r.data,
           r.horas_treino, r.captura, r.cobertura, r.reward, r.camadas, r.neuronios, r.learning_rate, r.gamma,
-          r.entradas_total, r.entradas_formato, r.acoes, r.parametros, r.arquivo_onnx,
+          r.entradas_total, r.entradas_formato, r.acoes, r.parametros, r.arquivo_onnx, r.pai_conhecido,
         ]
       );
     }

@@ -36,7 +36,7 @@ os runs novos entram no banco do celular, e os registrados à mão continuam lá
 | `tools/exportar_linhagem.py` | Lê a `results/` do ML-Agents (logs do TensorBoard e `.onnx`) e gera `db/runsDoPc.json` |
 | `db/migracao.ts` | Liga as chaves estrangeiras, cria a tabela (`PRAGMA user_version` 0 → 1 → 2) e junta os runs do PC a cada abertura |
 | `db/consultas.ts` | Lista, linhagem (`WITH RECURSIVE`), filhos, descendentes e o INSERT de um run novo |
-| `db/runsDoTcc.ts` | Os 23 runs do TCC com versão e resultado escritos à mão (GraphExplorer v5–v6 e FreeExplorer v7) |
+| `db/runsDoTcc.ts` | Os runs do TCC da v1 à v7.4.4 (Seeker, GraphExplorer e FreeExplorer), com versão e resultado escritos à mão com versão e resultado escritos à mão (GraphExplorer v5–v6 e FreeExplorer v7) |
 | `db/runsDoPc.json` | Gerado pelo script: pai, steps e dados do cérebro de cada run, lidos dos logs |
 | `components/` | Lista, linhagem, cartão do cérebro e formulário |
 | `App.tsx` | A tela: `SQLiteProvider` e a troca entre lista, linhagem e formulário |

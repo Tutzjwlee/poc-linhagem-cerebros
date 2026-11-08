@@ -48,24 +48,35 @@ export function LinhagemView({ runId, onSelecionar, onVoltar, onRegistrarFilho }
         <Text style={styles.voltarTexto}>← Todos os runs</Text>
       </Pressable>
 
-      <Text style={styles.titulo}>{atual.run_id}</Text>
+      <Text style={styles.titulo}>{atual.versao}</Text>
       <Text style={styles.subtitulo}>
-        {atual.linha} · {atual.versao} · {atual.data}
+        {atual.linha} · run {atual.run_id} · {atual.data}
       </Text>
+      {nomeDaEpoca(atual) ? (
+        <Text style={styles.modelo}>O run-id usa a numeração de antes de 16/10; a versão atual é {atual.versao}.</Text>
+      ) : null}
       {atual.resultado ? <Text style={styles.resultado}>{atual.resultado}</Text> : null}
       {atual.modelo ? <Text style={styles.modelo}>Modelo: {atual.modelo}</Text> : null}
 
       <View style={styles.resumo}>
         {linhagem.length === 1 ? (
-          <Text style={styles.resumoTexto}>Treinado do zero</Text>
+          <Text style={styles.resumoTexto}>
+            {atual.pai_conhecido === 0 ? 'Origem a confirmar' : 'Treinado do zero'}
+          </Text>
         ) : (
           <Text style={styles.resumoTexto}>{linhagem.length} gerações</Text>
         )}
-        <Text style={styles.resumoDetalhe}>
-          {semNumero > 0 ? 'pelo menos ' : ''}
-          {formatarSteps(stepsConhecidos)} steps acumulados neste cérebro
-          {semNumero > 0 ? ` (${semNumero} ${semNumero === 1 ? 'run sem número' : 'runs sem número'})` : ''}
-        </Text>
+        {atual.pai_conhecido === 0 && linhagem.length === 1 ? (
+          <Text style={styles.resumoDetalhe}>
+            O run de treino não está nos logs deste PC: só o .onnx. Steps e herança a confirmar.
+          </Text>
+        ) : (
+          <Text style={styles.resumoDetalhe}>
+            {semNumero > 0 ? 'pelo menos ' : ''}
+            {formatarSteps(stepsConhecidos)} steps acumulados neste cérebro
+            {semNumero > 0 ? ` (${semNumero} ${semNumero === 1 ? 'run sem número' : 'runs sem número'})` : ''}
+          </Text>
+        )}
       </View>
 
       {/* Run registrado à mão não tem logs: o cartão só aparece para o que veio do PC. */}
@@ -88,10 +99,10 @@ export function LinhagemView({ runId, onSelecionar, onVoltar, onRegistrarFilho }
             </View>
             <View style={styles.eloCorpo}>
               <Text style={[styles.eloTitulo, ehAtual && styles.eloTituloAtual]}>
-                {elo.geracao}. {elo.run_id}
+                {elo.geracao}. {elo.versao}
               </Text>
               <Text style={styles.eloDetalhe}>
-                {elo.versao} · {elo.steps_m === null ? 'steps ?' : `${elo.steps_m}M steps`}
+                {elo.run_id} · {elo.steps_m === null ? 'steps ?' : `${elo.steps_m}M steps`}
               </Text>
               {elo.resultado ? <Text style={styles.eloResultado}>{elo.resultado}</Text> : null}
             </View>
@@ -128,6 +139,11 @@ export function LinhagemView({ runId, onSelecionar, onVoltar, onRegistrarFilho }
       </Pressable>
     </ScrollView>
   );
+}
+
+// Os runs de antes da renumeração de 16/10 têm outro número no nome (ex.: v8.1_zero_01 é a v7.1).
+function nomeDaEpoca(run: Run) {
+  return !run.run_id.startsWith(`${run.versao}_`);
 }
 
 function formatarSteps(milhoes: number) {

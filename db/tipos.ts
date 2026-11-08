@@ -26,7 +26,8 @@ export type DadosDoCerebro = {
   arquivo_onnx: string | null;
 };
 
-export type RunDoPc = Run & DadosDoCerebro;
+// pai_conhecido 0 = o run de treino não está nos logs (só o .onnx): sem pai não quer dizer "do zero".
+export type RunDoPc = Run & DadosDoCerebro & { pai_conhecido: number };
 
 // Um elo da linhagem: geracao 1 = o run do zero.
 export type Elo = RunDoPc & { geracao: number };

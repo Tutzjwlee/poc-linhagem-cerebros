@@ -54,9 +54,9 @@ export function FormNovoRun({ paiInicial, onRegistrado, onCancelar }: Props) {
   return (
     <View style={styles.form}>
       <Text style={styles.titulo}>Registrar run</Text>
-      <Campo rotulo="Run-id" valor={runId} onChange={setRunId} exemplo="v7.4.6_teste_01" />
-      <Campo rotulo="Versão" valor={versao} onChange={setVersao} exemplo="v7.4.6" />
-      <Campo rotulo="Herda de (vazio = do zero)" valor={pai} onChange={setPai} exemplo="v7.4.5_ajustado_01" />
+      <Campo rotulo="Run-id" valor={runId} onChange={setRunId} exemplo="v7.4.5_teste_01" />
+      <Campo rotulo="Versão" valor={versao} onChange={setVersao} exemplo="v7.4.5" />
+      <Campo rotulo="Herda de (vazio = do zero)" valor={pai} onChange={setPai} exemplo="v7.4.4_planta_01" />
       <Campo rotulo="Steps (milhões)" valor={steps} onChange={setSteps} exemplo="1.5" teclado="decimal-pad" />
       <Campo rotulo="Resultado" valor={resultado} onChange={setResultado} exemplo="Caught 0.70" />
 

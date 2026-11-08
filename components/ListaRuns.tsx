@@ -2,7 +2,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text } from 'react-native';
 import { listarRuns } from '../db/consultas';
-import type { Run } from '../db/tipos';
+import type { RunDoPc } from '../db/tipos';
 import { ItemRun } from './ItemRun';
 import { cores } from './cores';
 
@@ -14,7 +14,7 @@ type Props = {
 
 export function ListaRuns({ versaoDosDados, onSelecionar }: Props) {
   const db = useSQLiteContext();
-  const [runs, setRuns] = useState<Run[] | null>(null);
+  const [runs, setRuns] = useState<RunDoPc[] | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -32,7 +32,12 @@ export function ListaRuns({ versaoDosDados, onSelecionar }: Props) {
       keyExtractor={(run) => run.run_id}
       renderItem={({ item }) => <ItemRun run={item} onPress={onSelecionar} />}
       ListHeaderComponent={
-        runs ? <Text style={styles.contagem}>{runs.length} runs · toque num run para ver a linhagem</Text> : undefined
+        runs ? (
+          <Text style={styles.contagem}>
+            {runs.length} runs da v1 à v7, em ordem de data · toque num run para ver a linhagem.{'\n'}A etiqueta é a
+            versão atual; o run-id mantém o nome da época (ex.: v8.1_zero_01 é a v7.1).
+          </Text>
+        ) : undefined
       }
       ListEmptyComponent={<Text style={styles.vazio}>{runs === null ? 'Abrindo o banco…' : 'Nenhum run.'}</Text>}
     />

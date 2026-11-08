@@ -14,7 +14,7 @@ export function CerebroCard({ cerebro }: Props) {
 
   return (
     <View style={styles.cartao}>
-      <Text style={styles.titulo}>Cérebro (dos logs do PC)</Text>
+      <Text style={styles.titulo}>Cérebro (lido dos logs e do .onnx)</Text>
       {c.entradas_total !== null ? (
         <Linha rotulo="Entradas" valor={`${c.entradas_total} números (${c.entradas_formato})`} />
       ) : null}

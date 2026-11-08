@@ -67,7 +67,7 @@ flowchart LR
   J -. "vai junto no app" .-> A
   A[App abre] --> B["onInit: PRAGMA foreign_keys = ON"]
   B --> C{"PRAGMA user_version"}
-  C -- "0 (primeira vez)" --> D["CREATE TABLE runs + 23 runs do TCC"]
+  C -- "0 (primeira vez)" --> D["CREATE TABLE runs + runs do TCC (v1–v7)"]
   C -- "1 (app antigo)" --> M["ALTER TABLE: colunas do cérebro"]
   D --> M
   M --> I["INSERT ... ON CONFLICT: junta os runs do PC"]
@@ -92,6 +92,16 @@ flowchart LR
   regrava esse arquivo com `initialize_from: null` (aconteceu em 6 runs, como `v7.4.4_planta_01`). O script lê o
   primeiro log do TensorBoard de cada run, onde o ML-Agents grava as configurações do início com o `init_path`
   do run pai.
+- **Versão × run-id**: em 16/10 as versões do TCC foram renumeradas (`docs/graph/fases-de-treino.md` do PROJECT-IA),
+  mas os arquivos ficaram com o nome da época. Por isso `v8.1_zero_01` é a **v7.1** e vem *antes* da v7.3, e
+  `v5.1_zero_01` é a v5.3. O app mostra a versão atual como título e o run-id como detalhe, avisando quando o nome é
+  antigo. O script traduz esses runs por uma tabela tirada do mesmo documento; runs novos seguem `vM.m.p_tarefa_NN`
+  e a versão sai do próprio nome.
+- **Da v1 à v7**: a lista segue os 18 cérebros da vitrine da branch `exhibit` do PROJECT-IA (uma estande por
+  versão, `ShowcaseSceneSetup.cs`) e os runs da linhagem de cada um. Os Seeker v1–v3 e a v4.0 só existem como
+  `.onnx` (o treino não está nos logs deste PC): entram com `pai_conhecido = 0`, e a tela diz "origem a confirmar"
+  em vez de "treinado do zero". Ausência de pai e pai desconhecido são coisas diferentes, e o banco guarda a
+  diferença.
 - **Dados do cérebro**: entradas e saídas saem do `.onnx` final do run (ou do checkpoint mais novo, se o treino
   parou sem exportar); camadas, neurônios, learning rate e gamma, do mesmo texto de configurações; captura,
   cobertura e reward são a média dos últimos 100 mil steps do TensorBoard. Runs com menos de 100 mil steps
@@ -129,6 +139,9 @@ flowchart LR
   `npx expo prebuild`.
 - `react-native-cozo`, README — https://github.com/AdebisiJoe/react-native-cozo — "won't work with Expo Go";
   Cozo oficial — https://github.com/cozodb/cozo — sem React Native na lista de plataformas.
+- PROJECT-IA, branch `exhibit`, `Assets/Scripts/Editor/ShowcaseSceneSetup.cs` — a vitrine com um cérebro por versão
+  (v1 a v7.4.4), com o `.onnx`, o título e o resultado de cada um; e `docs/graph/fases-de-treino.md` (versões e
+  renumeração de 16/10).
 - ML-Agents (clone local, release 21), `ml-agents/mlagents/trainers/stats.py` — o `TensorboardWriter` grava as
   configurações do treino no log como o texto `Hyperparameters` (é dali que o script tira o `init_path`).
 - Expo, *Using Model Context Protocol (MCP) with Expo* — https://docs.expo.dev/eas/ai/mcp/ — servidor
@@ -147,7 +160,9 @@ lint e num teste do SQL. Os erros abaixo aconteceram de verdade durante a constr
 - Como percebi: ao montar a tabela de runs, contando elo por elo (`v8.1_zero_01` → `v8.2_mapa_01..05` →
   `v7.3_ronda_01/02` → `v7.4_final_01` → `v7.4.1` → `v7.4.2` → `v7.4.3` → `v7.4.4`), e depois rodando a própria consulta
   recursiva no SQLite.
-- O certo: 13 e 15. O critério foi corrigido antes da implementação.
+- O certo: 13 e 15. O critério foi corrigido antes da implementação. (Na época o run novo herdava de
+  `v7.4.5_ajustado_01`; depois a linha oficial do TCC foi fechada no `v7.4.4_planta_01`, e o run de teste passou a
+  herdar dele, com 14 gerações.)
 
 **2. `ListHeaderComponent={... : null}`**
 - Pedido: mostrar a contagem de runs no topo do `FlatList` só depois de carregar.
@@ -214,7 +229,14 @@ lint e num teste do SQL. Os erros abaixo aconteceram de verdade durante a constr
 
 - [preencher depois de verificar os critérios no aparelho]
 - Elos confirmados nos logs do PC: `v8.2_mapa_02` e `_03` herdaram mesmo do run anterior (`init_path` no primeiro log
-  de cada um). Os 22 pais lidos dos logs batem com os que tinham sido digitados à mão.
+  de cada um). Os 21 pais da v5–v7 lidos dos logs batem com os que tinham sido digitados à mão.
+- Na v4, os logs confirmam o "em etapas" do documento: `node4_e1_01` (E1) → `node4_e2_02` → `_04` → `_05` → `_06`
+  → `node4_e3_01` (E3), com galhos (`node4_e2_01` e `_03` não tiveram filhos). É a primeira árvore com ramos do app.
+- Da v1 à v4.3.6 o cérebro cresce de 38 entradas e 2 ações (Seeker) para 145 e 4 (v4.3.6), 535 (v6.0) e 437 (v7.4.4).
+- A linha oficial do TCC termina no `v7.4.4_planta_01`. Na `results/` há também o `v7.4.5_ajustado_01` (fora do
+  projeto) e um treino curto de teste, `v7.4.6_demo_01` (151 mil steps), que herdou dele. O script encontrou esse run
+  novo sozinho e, como o pai estava excluído, gravou-o como "do zero" com o aviso no resultado, em vez de derrubar a
+  importação. Os dois ficam de fora pela lista `FORA_DO_PROJETO` do script, e o teste foi refeito herdando do v7.4.4.
 - Os steps agora vêm dos logs, e alguns diferem do que estava no histórico escrito: `v8.2_mapa_01..03` (antes sem
   número) têm 8,61M, 1,63M e 1,2M; `v8.2_mapa_04` 3,49M (o histórico dizia 3,18M), `v7.4.2_salas_01` 6,79M (6,5M),
   `v5.0_zero_02` 3,65M (3,15M) e `v4.1_noite_01` 7,25M (7,1M). Com isso, `v7.4.4_planta_01` passa a somar 106,3M steps

@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { Run } from '../db/tipos';
+import type { RunDoPc } from '../db/tipos';
 import { corDaLinha, cores } from './cores';
 
 type Props = {
-  run: Run;
+  run: RunDoPc;
   onPress: (runId: string) => void;
 };
 
@@ -20,7 +20,9 @@ export function ItemRun({ run, onPress }: Props) {
       </View>
       <View style={styles.corpo}>
         <Text style={styles.runId}>{run.run_id}</Text>
-        <Text style={styles.herda}>{run.pai ? `herda de ${run.pai}` : 'do zero'}</Text>
+        <Text style={styles.herda}>
+          {run.pai ? `herda de ${run.pai}` : run.pai_conhecido === 0 ? 'origem a confirmar' : 'do zero'}
+        </Text>
       </View>
       <Text style={styles.steps}>{run.steps_m === null ? '?' : `${run.steps_m}M`}</Text>
     </Pressable>

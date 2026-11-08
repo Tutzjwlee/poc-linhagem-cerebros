@@ -20,6 +20,61 @@ COMPORTAMENTOS = ("FreeExplorer", "GraphExplorer")
 NOME_COM_VERSAO = re.compile(r"^(v\d+(?:\.\d+)*)_")
 # Abaixo disso é começo abortado (ex.: v4c_fuga_01, 28 mil steps), não um cérebro.
 STEPS_MINIMOS = 100_000
+# Runs que estão na results/ mas não fazem parte do TCC (a linha oficial termina no v7.4.4_planta_01).
+FORA_DO_PROJETO = {"v7.4.5_ajustado_01", "v7.4.6_demo_01"}
+# Renumeração de 16/10 (PROJECT-IA, docs/graph/fases-de-treino.md): o run-id guarda o nome da época.
+# Ex.: v8.1_zero_01 é a v7.1, anterior à v7.3. Runs criados depois seguem vM.m.p_tarefa_NN e saem do próprio nome.
+VERSAO_POR_RUN = {
+    "v4_s1_01": "v5.0",
+    "v4_noite_01": "v5.0",
+    "v4.1_noite_01": "v5.1",
+    "v4.2_noite_01": "v5.1.1",
+    "v4.3_caca_01": "v5.1.2",
+    "v5.0_zero_02": "v5.2",
+    "v5.1_zero_01": "v5.3",
+    "v5.2_caca_01": "v6.0",
+    "v8.0_zero_02": "v7.0",
+    "v8.1_zero_01": "v7.1",
+    "v8.2_mapa_01": "v7.2",
+    "v8.2_mapa_02": "v7.2",
+    "v8.2_mapa_03": "v7.2",
+    "v8.2_mapa_04": "v7.2",
+    "v8.2_mapa_05": "v7.2",
+    "v7.3_ronda_02": "v7.3.1",
+    # v4: nomes sem versão. graph_10..12 ficam entre a v4.0 (mapa Nodes, até 18/09) e a v4.1 (Nodes_2): a confirmar.
+    "graph_10": "v4.x",
+    "graph_11": "v4.x",
+    "graph_12": "v4.x",
+    "graph_14": "v4.1.1",
+    "graph_16": "v4.1.1",
+    "graph_18": "v4.1",
+    "night_01": "v4.1",
+    "night_04": "v4.1.2",
+    "node4_01": "v4.3.0",
+    "node4_noarrow_01": "v4.3.1",
+    "node4_noarrow_02--resume": "v4.3.2",
+    "node4_noarrow_03": "v4.3.2",
+    "node4_patrol_02": "v4.3.3",
+    "node4_search_01": "v4.3.5",
+    "node4_search_02": "v4.3.5",
+    "node4_search_03": "v4.3.5",
+    "node4_search_04": "v4.3.5",
+    "node4_e1_01": "v4.3.6",
+    "node4_e2_01": "v4.3.6",
+    "node4_e2_02": "v4.3.6",
+    "node4_e2_03": "v4.3.6",
+    "node4_e2_04": "v4.3.6",
+    "node4_e2_05": "v4.3.6",
+    "node4_e2_06": "v4.3.6",
+    "node4_e3_01": "v4.3.6",
+}
+# Cérebros da vitrine (branch exhibit) cujo run não está na results/ deste PC: só o .onnx, origem a confirmar.
+MODELOS_SEM_LOG = {
+    "SeekerV1": ("v1", "Seeker", "Assets/SeekerV1.onnx"),
+    "SeekerV2": ("v2", "Seeker", "Assets/SeekerV2.onnx"),
+    "SeekerV3": ("v3", "Seeker", "Assets/SeekerV3.onnx"),
+    "GraphExplorerV1": ("v4.0", "GraphExplorer", "Assets/Brains/_Antigos/GraphExplorerV1.onnx"),
+}
 # Média dos últimos pontos do TensorBoard (10 = 100 mil steps): o último sozinho oscila demais.
 PONTOS_DA_MEDIA = 10
 
@@ -120,7 +175,7 @@ def ler_run(pasta_run):
     nome = os.path.basename(pasta_run)
     versao = NOME_COM_VERSAO.match(nome)
     comportamento = next((c for c in COMPORTAMENTOS if os.path.isdir(os.path.join(pasta_run, c))), None)
-    if versao is None or comportamento is None:
+    if (versao is None and nome not in VERSAO_POR_RUN) or comportamento is None or nome in FORA_DO_PROJETO:
         return None
     arquivos = arquivos_de_log(os.path.join(pasta_run, comportamento))
     if not arquivos:
@@ -138,9 +193,10 @@ def ler_run(pasta_run):
 
     run = {
         "run_id": nome,
-        "versao": versao.group(1),
+        "versao": VERSAO_POR_RUN[nome] if nome in VERSAO_POR_RUN else versao.group(1),
         "linha": comportamento,
         "pai": pai,
+        "pai_conhecido": 1,
         "steps_m": round(steps / 1e6, 3),
         "resultado": "",
         "modelo": None,
@@ -163,6 +219,24 @@ def ler_run(pasta_run):
     if caminho_onnx:
         run.update(ler_onnx(caminho_onnx))
         run["arquivo_onnx"] = os.path.basename(caminho_onnx)
+    return run
+
+
+def ler_modelo_sem_log(projeto, run_id, versao, linha, caminho):
+    arquivo = os.path.join(projeto, caminho)
+    if not os.path.exists(arquivo):
+        print(f"  aviso: {caminho} não encontrado; {run_id} fica sem os dados do cérebro.")
+        dados = {}
+    else:
+        dados = ler_onnx(arquivo)
+    run = {
+        "run_id": run_id, "versao": versao, "linha": linha, "pai": None, "pai_conhecido": 0, "steps_m": None,
+        "resultado": "", "modelo": None, "data": "", "horas_treino": None, "captura": None, "cobertura": None,
+        "reward": None, "camadas": None, "neuronios": None, "learning_rate": None, "gamma": None,
+        "entradas_total": None, "entradas_formato": None, "acoes": None, "parametros": None,
+        "arquivo_onnx": os.path.basename(caminho),
+    }
+    run.update(dados)
     return run
 
 
@@ -200,6 +274,12 @@ def main():
                 print(f"  {run['run_id']:<22} {run['steps_m']:>7}M  pai: {run['pai'] or '(do zero)'}")
     if not runs:
         sys.exit("Nenhum run do monstro encontrado nessa pasta.")
+
+    # A results/ fica na raiz do PROJECT-IA; os .onnx sem log são lidos de lá.
+    projeto = os.path.dirname(os.path.abspath(args.results))
+    for run_id, (versao, linha, caminho) in MODELOS_SEM_LOG.items():
+        runs.append(ler_modelo_sem_log(projeto, run_id, versao, linha, caminho))
+        print(f"  {run_id:<22}       ?   (só o .onnx: {caminho})")
 
     ids = {r["run_id"] for r in runs}
     for run in runs:

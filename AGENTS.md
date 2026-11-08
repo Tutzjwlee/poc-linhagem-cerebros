@@ -59,6 +59,8 @@ Docs: https://docs.expo.dev/eas/index.md
 - Uma tela só, em `App.tsx`: lista dos runs; tocar num run mostra a linhagem até o run do zero, os dados do cérebro
   e os runs que herdaram dele; um formulário registra um run novo.
 - `db/runsDoPc.json` é gerado por `tools/exportar_linhagem.py` a partir da `results/` do ML-Agents: não edite à mão.
+- Vai da v1 à v7.4.4 (Seeker, GraphExplorer, FreeExplorer). O run-id guarda o nome da época (antes da renumeração de
+  16/10): a versão atual é a coluna `versao`. Sem pai + `pai_conhecido = 0` = origem a confirmar, não "do zero".
 - Não usar Expo Router, a menos que a tecnologia investigada seja a navegação.
 - Fora de escopo: login, sincronização pela rede com o PC, gráficos do TensorBoard, design final e tudo que não
   demonstre a pergunta.

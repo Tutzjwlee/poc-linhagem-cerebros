@@ -1,8 +1,9 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { Elo, Run, RunDoPc } from './tipos';
 
+// Por data, não por linha: assim a lista lê da v1 (Seeker) à v7 (FreeExplorer).
 export function listarRuns(db: SQLiteDatabase) {
-  return db.getAllAsync<Run>('SELECT * FROM runs ORDER BY linha, data, run_id');
+  return db.getAllAsync<RunDoPc>('SELECT * FROM runs ORDER BY data, run_id');
 }
 
 // Sobe pelos pais até o run do zero. O limite de 100 só protege contra um ciclo que o banco não deveria ter.

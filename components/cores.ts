@@ -11,5 +11,6 @@ export const cores = {
 
 // Uma cor por linha de agente, para o elo mostrar de que linha veio.
 export function corDaLinha(linha: string) {
+  if (linha === 'Seeker') return '#5E4B8B';
   return linha === 'GraphExplorer' ? '#8A5A2F' : '#2F5D8A';
 }
